@@ -1,0 +1,36 @@
+import socket
+import threading
+
+# Define the allowed IPs for demonstration purposes
+ALLOWED_IPS = ['127.0.0.1']  # Add other allowed IPs as needed
+
+def handle_connection(client_socket, addr):
+    print(f"Connection from {addr} accepted.")
+    if addr[0] not in ALLOWED_IPS:
+        print(f"Connection from {addr[0]} denied.")
+        client_socket.close()
+        return
+
+    # Here we can add more processing, such as logging or filtering
+    client_socket.send(b"Welcome to the Firewall!\n")
+    client_socket.close()
+
+def start_firewall(port=9999):
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind(('', port))
+    server.listen(5)
+    print(f"Firewall running on port {port}...")
+
+    try:
+        while True:
+            client_socket, addr = server.accept()
+            # Start a new thread to handle the connection
+            client_handler = threading.Thread(target=handle_connection, args=(client_socket, addr))
+            client_handler.start()
+    except KeyboardInterrupt:
+        print("Shutting down the firewall.")
+    finally:
+        server.close()
+
+if __name__ == "__main__":
+    start_firewall()
